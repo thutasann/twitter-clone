@@ -20,6 +20,8 @@ import {
 } from "@heroicons/react/outline";
 import { useRouter } from "next/router";
 import Moment from "react-moment";
+import { Picker } from "emoji-mart";
+import "emoji-mart/css/emoji-mart.css";
 
 
 function Modal() {
@@ -29,12 +31,13 @@ function Modal() {
     const [postId, setPostId] = useRecoilState(postIdState); // global state
     const [ post, setPost ] = useState(null);
     const [ comment, setComment ] = useState("");
+    const [ showEmojis, setShowEmojis ] = useState(false);
     const router = useRouter();
 
 
     // setPost
     useEffect(() => {
-        onSnapshot(collection(db, "posts", postId ), (snapshot) =>{
+        onSnapshot(doc(db, "posts", postId ), (snapshot) =>{
             setPost(snapshot.data());
         })
     }, [db]);
@@ -43,7 +46,29 @@ function Modal() {
     // sendComment
     const sendComment = async (e) =>{
         e.preventDefault();
+
+        await addDoc(collection(db, "posts", postId, "comments"), {
+            comment: comment,
+            username: session.user.name,
+            tag: session.user.tag,
+            userImg: session.user.image,
+            timestamp: serverTimestamp(),
+        });
+
+        setIsOpen(false);
+        setComment("");
+
+        router.push(`/${postId}`);
     }
+
+    // Add Emoji
+    const addEmoji = (e) => {
+        let sym = e.unified.split("-");
+        let codesArray = [];
+        sym.forEach((el) => codesArray.push("0x" + el));
+        let emoji = String.fromCodePoint(...codesArray);
+        setInput(comment + emoji);
+    };
 
 
     return (
@@ -71,6 +96,7 @@ function Modal() {
                         leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                         leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     >
+                        
                         <div className='inline-block align-bottom bg-black rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full'>
                             
                             <div className='flex items-center px-1.5 py-2 border-b border-gray-700'>
@@ -132,7 +158,7 @@ function Modal() {
                                                         <ChartBarIcon className="text-[#1d9bf0] h-[22px]" />
                                                     </div>
 
-                                                    <div className="icon">
+                                                    <div className="icon" onClick={() => setShowEmojis(!showEmojis)}>
                                                         <EmojiHappyIcon className="text-[#1d9bf0] h-[22px]" />
                                                     </div>
 
@@ -148,6 +174,7 @@ function Modal() {
                                                 >
                                                     Reply
                                                 </button>
+                                                
                                             </div>  
                                         </div>
                                     </div>

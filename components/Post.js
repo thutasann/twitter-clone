@@ -40,6 +40,18 @@ function Post({ id, post, postPage}) { // postPage ==> to browse detail page
     const router = useRouter();
 
 
+    // setComments
+    useEffect(() =>{
+        onSnapshot(
+            query(
+                collection(db, "posts", id, "comments"),
+                orderBy("timestamp", "desc")
+            ),
+            (snapshot) => setComments(snapshot.docs)
+        )
+    }, [db, id]);
+
+
     // setLikes
     useEffect(() => {
         onSnapshot(collection(db, "posts", id, "likes"), (snapshot) =>
@@ -67,7 +79,7 @@ function Post({ id, post, postPage}) { // postPage ==> to browse detail page
     };
     
     return (
-        <div onClick={() => router.push(`/{$id}`)} className="p-3 flex cursor-pointer border-b border-gray-700">
+        <div onClick={() => router.push(`/${id}`)} className="p-3 flex cursor-pointer border-b border-gray-700">
             
             {
                 !postPage && ( // if postPage is not true
